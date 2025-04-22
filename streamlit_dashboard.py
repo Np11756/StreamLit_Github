@@ -95,10 +95,10 @@ with tab2:
         sales_data.append({"Region": region, "Total Sales": total})
     sales_df = pd.DataFrame(sales_data).sort_values("Total Sales", ascending=False)
     fig_bar = px.bar(sales_df, x="Region", y="Total Sales", title="Click a Region to Filter Map")
-    selected = plotly_events(fig_bar, click_event=True, key="barclick")
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("#### Dealership Locations Map")
+    filtered_df = df
     region_coords = {
         "Austin": (30.2672, -97.7431),
         "Greenville": (34.8526, -82.3940),
@@ -130,7 +130,8 @@ with tab3:
     if selected_region != "All":
         trend_df = trend_df[trend_df["Dealer_Region"] == selected_region]
 
-    trend = trend_df.groupby(["Month_Num", "Dealer_Region"])["Price ($)"].mean().reset_index()
+    trend = trend_df.groupby(["Month_Num"])["Price ($)"].mean().reset_index()
+    trend['Dealer_Region'] = selected_region if selected_region != 'All' else 'All Regions'
     fig_trend = px.line(trend, x="Month_Num", y="Price ($)", color="Dealer_Region", markers=True, title="Monthly Avg Price")
     fig_trend.update_layout(plot_bgcolor='#1e1e1e', paper_bgcolor='#1e1e1e', font_color='white')
     st.plotly_chart(fig_trend, use_container_width=True)
