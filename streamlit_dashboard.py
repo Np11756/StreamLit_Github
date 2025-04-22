@@ -84,6 +84,7 @@ with tab1:
         st.markdown(f"<div style='background-color:#2a2a2a; padding:20px; border-radius:10px'><h4 style='color:white;'>Linear Regression Model</h4><h2 style='color:white;'>${lr_pred:,.2f}</h2></div>", unsafe_allow_html=True)
 
 # --- TAB 2: Dealership Map + Bar Chart ---
+# --- TAB 2: Dealership Map + Bar Chart ---
 with tab2:
     st.markdown("#### Sales by Region")
 
@@ -93,12 +94,13 @@ with tab2:
         total = df[df[r] == 1]["Price ($)"].sum()
         region = r.replace("Dealer_Region_", "")
         sales_data.append({"Region": region, "Total Sales": total})
+
     sales_df = pd.DataFrame(sales_data).sort_values("Total Sales", ascending=False)
-    fig_bar = px.bar(sales_df, x="Region", y="Total Sales", title="Click a Region to Filter Map")
+    fig_bar = px.bar(sales_df, x="Region", y="Total Sales", title="Total Sales by Region")
     st.plotly_chart(fig_bar, use_container_width=True)
 
     st.markdown("#### Dealership Locations Map")
-    filtered_df = df
+
     region_coords = {
         "Austin": (30.2672, -97.7431),
         "Greenville": (34.8526, -82.3940),
@@ -107,18 +109,15 @@ with tab2:
         "Pasco": (46.2396, -119.1006),
         "Scottsdale": (33.4942, -111.9261),
     }
+
     df["Latitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[0])
     df["Longitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[1])
-    if selected:
-        selected_region = selected[0]["x"]
-        filtered_df = df[df[f"Dealer_Region_{selected_region}"] == 1]
-    else:
-        filtered_df = df
-    map_fig = px.scatter_mapbox(
-        filtered_df, lat="Latitude", lon="Longitude", color="Dealer_Region",
+
+    fig_map = px.scatter_mapbox(
+        df, lat="Latitude", lon="Longitude", color="Dealer_Region",
         zoom=3, mapbox_style="open-street-map", title="Dealer Map"
     )
-    st.plotly_chart(map_fig, use_container_width=True)
+    st.plotly_chart(fig_map, use_container_width=True)
 
 # --- TAB 3: Market Summary with Line Chart ---
 with tab3:
