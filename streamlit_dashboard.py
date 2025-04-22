@@ -20,7 +20,7 @@ st.title("🚗 Car Sales Forecasting Dashboard")
 
 tab1, tab2, tab3 = st.tabs(["Price Prediction", "Dealership Map", "Market Trends"])
 
-# --- TAB 1: Price Prediction ---
+# --- TAB 1: Simplified Price Prediction ---
 with tab1:
     st.header("💰 Predict Car Price")
 
@@ -29,56 +29,36 @@ with tab1:
         income = st.slider("Annual Income", 20000, 200000, 60000)
         car_age = st.slider("Car Age", 0, 20, 5)
         month = st.slider("Month of Sale", 1, 12, 6)
-    
+
     with col2:
-        # Load dropdown options directly from the dataset, not model
-        transmission_options = sorted([col.replace("Transmission_", "") for col in df.columns if col.startswith("Transmission_")])
-        transmission = st.selectbox("Transmission", transmission_options)
-
-        color_options = sorted([col.replace("Color_", "") for col in df.columns if col.startswith("Color_")])
-        color = st.selectbox("Color", color_options)
-
-        body_style_options = sorted([col.replace("Body Style_", "") for col in df.columns if col.startswith("Body Style_")])
-        body_style = st.selectbox("Body Style", body_style_options)
-
         region_options = sorted([col.replace("Dealer_Region_", "") for col in df.columns if col.startswith("Dealer_Region_")])
         region = st.selectbox("Dealer Region", region_options)
 
-    # Match model's input features
+    # Build input
     feature_list = list(hgb_model.feature_names_in_)
     input_data = {col: 0 for col in feature_list}
     input_data["Annual Income"] = income
     input_data["Car_Age"] = car_age
     input_data["Month_Num"] = month
 
-    # Handle one-hot features (only if present in model)
-    encoded_fields = {
-        f"Transmission_{transmission}": transmission,
-        f"Color_{color}": color,
-        f"Body Style_{body_style}": body_style,
-        f"Dealer_Region_{region}": region
-    }
-
-    for col_name in encoded_fields:
-        if col_name in input_data:
-            input_data[col_name] = 1
+    # Only include Dealer Region if model expects it
+    region_col = f"Dealer_Region_{region}"
+    if region_col in input_data:
+        input_data[region_col] = 1
 
     input_df = pd.DataFrame([input_data])
 
-    # DEBUG INFO
-    with st.expander("🔎 Debug: Model Input Sent"):
-        st.write("Input DataFrame")
+    with st.expander("🔎 Debug Info"):
+        st.write("Input to model:")
         st.dataframe(input_df)
-        st.write("Expected Features")
-        st.write(feature_list)
 
-    # Make predictions
     hgb_pred = hgb_model.predict(input_df)[0]
     lr_pred = lr_model.predict(input_df)[0]
 
     st.subheader("Predicted Prices")
     st.metric("HistGradientBoosting", f"${hgb_pred:,.2f}")
     st.metric("Linear Regression", f"${lr_pred:,.2f}")
+
 
 # --- TAB 2: Dealership Map ---
 with tab2:
