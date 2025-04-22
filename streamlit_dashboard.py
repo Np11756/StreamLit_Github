@@ -38,7 +38,8 @@ def load_data():
     df = safe_reconstruct_column(df, "Dealer_Region_", "Dealer_Region")
     df = safe_reconstruct_column(df, "Body Style_", "Body Style")
     df = safe_reconstruct_column(df, "Transmission_", "Transmission")
-    df = safe_reconstruct_column(df, "Price_Category_", "Price Category")
+    # You can re-enable this if your dataset has Price_Category_
+    # df = safe_reconstruct_column(df, "Price_Category_", "Price Category")
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -53,7 +54,6 @@ def load_data():
     df["Longitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[1])
 
     return df
-
 
 @st.cache_resource
 def load_models():
@@ -90,8 +90,7 @@ with tab1:
     categorical_prefixes = {
         "Dealer_Region": region,
         "Body Style": body_style,
-        "Transmission": transmission,
-        "Price_Category": price_category
+        "Transmission": transmission
     }
 
     for prefix, value in categorical_prefixes.items():
