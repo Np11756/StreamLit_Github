@@ -81,7 +81,6 @@ with tab1:
         region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
         body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
         transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
-        df = safe_reconstruct_column(df, "Price_Category_", "Price Category")
 
     input_data = {col: 0 for col in hgb_model.feature_names_in_}
     input_data["Month_Num"] = month
