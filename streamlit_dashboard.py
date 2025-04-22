@@ -127,5 +127,3 @@ with tab3:
     stats = df_latest.groupby("Dealer_Region")["Price ($)"].agg(["count", "mean", "sum"]).reset_index()
     stats.columns = ["Region", "Sales Count", "Avg Price", "Total Sales"]
     st.dataframe(stats.sort_values("Total Sales", ascending=False), use_container_width=True)
-
-!streamlit run app.py &>/dev/null &
