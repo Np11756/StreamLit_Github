@@ -3,7 +3,7 @@ import pandas as pd
 import joblib
 import plotly.express as px
 
-# Page config
+# Page config and CSS styling
 st.set_page_config(page_title="Car Sales Forecast", layout="wide")
 st.markdown("""
 <style>
@@ -11,11 +11,16 @@ st.markdown("""
     padding: 2rem 2rem 0rem 2rem;
 }
 [data-testid="stMetric"] {
-    background-color: #1e1e1e;
+    background-color: #393939;
     text-align: center;
     padding: 20px;
     border-radius: 10px;
     margin-bottom: 10px;
+}
+[data-testid="stMetricLabel"] {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -45,22 +50,21 @@ def load_models():
 df = load_data()
 hgb_model, lr_model = load_models()
 
-# Title
 st.title("🚗 Car Sales Forecasting Dashboard")
-st.markdown("This dashboard predicts car sale prices using historical data and machine learning models. Adjust the inputs on the left to see real-time predictions and explore dealership performance across regions.")
+st.markdown("A streamlined machine learning dashboard to predict car sale prices, visualize dealership performance, and analyze market trends.")
 
-# Layout with 3 columns
-col1, col2, col3 = st.columns((1.5, 4, 2), gap="large")
+tab1, tab2, tab3 = st.tabs(["📈 Price Prediction", "🗺️ Dealership Map", "📊 Market Summary"])
 
-# --- LEFT COLUMN: Input & Prediction ---
-with col1:
-    st.markdown("#### Predict Price")
+# --- TAB 1: Price Prediction ---
+with tab1:
+    st.markdown("#### Customize Inputs")
+    col1, col2 = st.columns(2)
+    with col1:
+        month = st.slider("Month of Sale", 1, 12, 6)
+        income = st.slider("Annual Income", 20000, 200000, 75000)
+    with col2:
+        region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
 
-    month = st.slider("Month of Sale", 1, 12, 6)
-    income = st.slider("Annual Income", 20000, 200000, 75000)
-    region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
-
-    # Build input data for prediction
     feature_list = list(hgb_model.feature_names_in_)
     input_data = {col: 0 for col in feature_list}
     input_data["Month_Num"] = month
@@ -72,11 +76,13 @@ with col1:
     hgb_pred = hgb_model.predict(input_df)[0]
     lr_pred = lr_model.predict(input_df)[0]
 
-    st.metric("HistGradientBoosting", f"${hgb_pred:,.2f}")
-    st.metric("Linear Regression", f"${lr_pred:,.2f}")
+    st.markdown("#### Model Predictions")
+    col1, col2 = st.columns(2)
+    col1.metric("HistGradientBoosting", f"${hgb_pred:,.2f}")
+    col2.metric("Linear Regression", f"${lr_pred:,.2f}")
 
-# --- CENTER COLUMN: Dealership Map ---
-with col2:
+# --- TAB 2: Dealership Map ---
+with tab2:
     st.markdown("#### Dealership Locations")
 
     region_coords = {
@@ -98,12 +104,13 @@ with col2:
     )
     st.plotly_chart(map_fig, use_container_width=True)
 
-# --- RIGHT COLUMN: Summary Stats ---
-with col3:
-    st.markdown("#### Market Summary")
+# --- TAB 3: Market Summary ---
+with tab3:
+    st.markdown("#### Monthly Sales Summary")
     latest_month = df["Month_Num"].max()
     df_latest = df[df["Month_Num"] == latest_month]
 
     stats = df_latest.groupby("Dealer_Region")["Price ($)"].agg(["count", "mean", "sum"]).reset_index()
     stats.columns = ["Region", "Sales Count", "Avg Price", "Total Sales"]
+
     st.dataframe(stats.sort_values("Total Sales", ascending=False), use_container_width=True)
