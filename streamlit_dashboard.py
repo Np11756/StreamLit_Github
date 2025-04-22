@@ -26,19 +26,19 @@ st.markdown("""
 def load_data():
     df = pd.read_csv("car_sales_cleaned.csv")
 
-    def safe_reconstruct(df, prefix, new_col):
-        matching_cols = [col for col in df.columns if col.startswith(prefix)]
-        if matching_cols:
-            df[new_col] = df[matching_cols].idxmax(axis=1).str.replace(prefix, "")
+    def safe_reconstruct_column(df, prefix, new_col):
+        onehot_cols = [col for col in df.columns if col.startswith(prefix)]
+        if onehot_cols:
+            df[new_col] = df[onehot_cols].idxmax(axis=1).str.replace(prefix, "", regex=False)
         else:
-            st.warning(f"Warning: No one-hot columns found for '{prefix}'. Column '{new_col}' set to 'Unknown'.")
             df[new_col] = "Unknown"
+            st.warning(f"Column reconstruction skipped: No columns found with prefix '{prefix}'")
         return df
 
-    df = safe_reconstruct(df, "Dealer_Region_", "Dealer_Region")
-    df = safe_reconstruct(df, "Body Style_", "Body Style")
-    df = safe_reconstruct(df, "Transmission_", "Transmission")
-    df = safe_reconstruct(df, "Price_Category_", "Price Category")
+    df = safe_reconstruct_column(df, "Dealer_Region_", "Dealer_Region")
+    df = safe_reconstruct_column(df, "Body Style_", "Body Style")
+    df = safe_reconstruct_column(df, "Transmission_", "Transmission")
+    df = safe_reconstruct_column(df, "Price_Category_", "Price Category")
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -53,6 +53,7 @@ def load_data():
     df["Longitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[1])
 
     return df
+
 
 @st.cache_resource
 def load_models():
