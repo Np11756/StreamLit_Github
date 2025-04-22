@@ -26,14 +26,16 @@ st.markdown("""
 def load_data():
     df = pd.read_csv("car_sales_cleaned.csv")
 
-    # Reconstruct categorical values from one-hot columns
+    # Reconstruct categorical columns from one-hot
     region_cols = [col for col in df.columns if "Dealer_Region_" in col]
     body_cols = [col for col in df.columns if "Body Style_" in col]
     trans_cols = [col for col in df.columns if "Transmission_" in col]
+    price_cols = [col for col in df.columns if "Price_Category_" in col]
 
     df["Dealer_Region"] = df[region_cols].idxmax(axis=1).str.replace("Dealer_Region_", "")
     df["Body Style"] = df[body_cols].idxmax(axis=1).str.replace("Body Style_", "")
     df["Transmission"] = df[trans_cols].idxmax(axis=1).str.replace("Transmission_", "")
+    df["Price Category"] = df[price_cols].idxmax(axis=1).str.replace("Price_Category_", "")
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
