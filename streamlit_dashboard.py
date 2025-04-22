@@ -72,15 +72,16 @@ with tab1:
     st.markdown("<h3 style='color:white;'>Price Predictions</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:white;'>This tool uses two machine learning models to estimate car prices based on the selected features.</p>", unsafe_allow_html=True)
 
-    with st.sidebar:
-        st.markdown("### Customize Car Features")
-        month = st.slider("Month of Sale", 1, 12, 6)
-        car_age = st.slider("Car Age", 0, 20, 5)
-        income = st.slider("Annual Income", 20000, 200000, 75000)
+with st.sidebar:
+    st.markdown("### Customize Car Features")
+    month = st.slider("Month of Sale", 1, 12, 6)
+    car_age = st.slider("Car Age", 0, 20, 5)
+    income = st.slider("Annual Income", 20000, 200000, 75000)
 
-        region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
-        body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
-        transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
+    region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
+    body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
+    transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
+    price_category = st.selectbox("Price Category", sorted(df["Price Category"].unique()))
 
     input_data = {col: 0 for col in hgb_model.feature_names_in_}
     input_data["Month_Num"] = month
