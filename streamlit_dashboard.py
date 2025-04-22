@@ -33,10 +33,17 @@ with tab1:
         month = st.slider("Month of Sale", 1, 12, 6)
     
     with col2:
-        transmission = st.selectbox("Transmission", ["Manual"])
-        color = st.selectbox("Color", ["Pale White", "Red"])
-        body_style = st.selectbox("Body Style", ["Hatchback", "Passenger", "SUV", "Sedan"])
-        region = st.selectbox("Dealer Region", ["Austin", "Greenville", "Janesville", "Middletown", "Pasco", "Scottsdale"])
+        transmission_options = sorted([col.replace("Transmission_", "") for col in hgb_model.feature_names_in_ if col.startswith("Transmission_")])
+        transmission = st.selectbox("Transmission", transmission_options)
+
+        color_options = sorted([col.replace("Color_", "") for col in hgb_model.feature_names_in_ if col.startswith("Color_")])
+        color = st.selectbox("Color", color_options)
+
+        body_style_options = sorted([col.replace("Body Style_", "") for col in hgb_model.feature_names_in_ if col.startswith("Body Style_")])
+        body_style = st.selectbox("Body Style", body_style_options)
+
+        region_options = sorted([col.replace("Dealer_Region_", "") for col in hgb_model.feature_names_in_ if col.startswith("Dealer_Region_")])
+        region = st.selectbox("Dealer Region", region_options)
 
     # Safe feature construction
     feature_list = list(hgb_model.feature_names_in_)
@@ -45,17 +52,27 @@ with tab1:
     input_data["Car_Age"] = car_age
     input_data["Month_Num"] = month
 
-    # Set one-hot encoded flags safely
-    if "Transmission_Manual" in input_data and transmission == "Manual":
-        input_data["Transmission_Manual"] = 1
-    if f"Color_{color}" in input_data:
-        input_data[f"Color_{color}"] = 1
-    if f"Body Style_{body_style}" in input_data:
-        input_data[f"Body Style_{body_style}"] = 1
-    if f"Dealer_Region_{region}" in input_data:
-        input_data[f"Dealer_Region_{region}"] = 1
+    # Set one-hot encoded flags only if feature exists
+    for prefix, value in {
+        "Transmission": transmission,
+        "Color": color,
+        "Body Style": body_style,
+        "Dealer_Region": region
+    }.items():
+        col_name = f"{prefix}_{value}"
+        if col_name in input_data:
+            input_data[col_name] = 1
 
     input_df = pd.DataFrame([input_data])
+
+    # DEBUG: Show the input and model columns
+    with st.expander("🛠️ Debug Info"):
+        st.write("Input DataFrame Sent to Model:")
+        st.dataframe(input_df)
+        st.write("Expected Model Columns:")
+        st.write(feature_list)
+
+    # Predict
     hgb_pred = hgb_model.predict(input_df)[0]
     lr_pred = lr_model.predict(input_df)[0]
 
@@ -104,7 +121,8 @@ with tab2:
 # --- TAB 3: Market Trends ---
 with tab3:
     st.header("📈 Market Trends")
-    selected_body = st.selectbox("Filter by Body Style", ["All"] + ["Hatchback", "Passenger", "SUV", "Sedan"])
+    available_body_styles = sorted([col.replace("Body Style_", "") for col in df.columns if col.startswith("Body Style_")])
+    selected_body = st.selectbox("Filter by Body Style", ["All"] + available_body_styles)
     filtered = df.copy()
     if selected_body != "All":
         filtered = filtered[filtered[f"Body Style_{selected_body}"] == 1]
