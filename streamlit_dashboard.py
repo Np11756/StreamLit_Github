@@ -20,7 +20,7 @@ st.title("🚗 Car Sales Forecasting Dashboard")
 
 tab1, tab2, tab3 = st.tabs(["Price Prediction", "Dealership Map", "Market Trends"])
 
-# --- TAB 1: Simplified Price Prediction ---
+# --- TAB 1: Price Prediction (Working Inputs Only) ---
 with tab1:
     st.header("💰 Predict Car Price")
 
@@ -28,37 +28,35 @@ with tab1:
     with col1:
         income = st.slider("Annual Income", 20000, 200000, 60000)
         car_age = st.slider("Car Age", 0, 20, 5)
-        month = st.slider("Month of Sale", 1, 12, 6)
-
     with col2:
+        month = st.slider("Month of Sale", 1, 12, 6)
         region_options = sorted([col.replace("Dealer_Region_", "") for col in df.columns if col.startswith("Dealer_Region_")])
         region = st.selectbox("Dealer Region", region_options)
 
-    # Build input
+    # Build model input
     feature_list = list(hgb_model.feature_names_in_)
     input_data = {col: 0 for col in feature_list}
     input_data["Annual Income"] = income
     input_data["Car_Age"] = car_age
     input_data["Month_Num"] = month
 
-    # Only include Dealer Region if model expects it
     region_col = f"Dealer_Region_{region}"
     if region_col in input_data:
         input_data[region_col] = 1
 
     input_df = pd.DataFrame([input_data])
 
-    with st.expander("🔎 Debug Info"):
-        st.write("Input to model:")
+    # DEBUG - Optional
+    with st.expander("🛠️ Debug Model Input"):
         st.dataframe(input_df)
 
+    # Predict
     hgb_pred = hgb_model.predict(input_df)[0]
     lr_pred = lr_model.predict(input_df)[0]
 
     st.subheader("Predicted Prices")
     st.metric("HistGradientBoosting", f"${hgb_pred:,.2f}")
     st.metric("Linear Regression", f"${lr_pred:,.2f}")
-
 
 # --- TAB 2: Dealership Map ---
 with tab2:
