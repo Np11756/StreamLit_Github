@@ -38,8 +38,7 @@ def load_data():
     df = safe_reconstruct_column(df, "Dealer_Region_", "Dealer_Region")
     df = safe_reconstruct_column(df, "Body Style_", "Body Style")
     df = safe_reconstruct_column(df, "Transmission_", "Transmission")
-    # You can re-enable this if your dataset has Price_Category_
-    # df = safe_reconstruct_column(df, "Price_Category_", "Price Category")
+    df = safe_reconstruct_column(df, "Price_Category_", "Price Category")  # Safe, won't crash if missing
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -68,6 +67,7 @@ st.title("Car Sales Forecasting Dashboard")
 
 tab1, tab2, tab3 = st.tabs(["Price Prediction Tool", "Dealer Insights", "Market Trends"])
 
+# ---------------------- TAB 1 ----------------------
 with tab1:
     st.markdown("<h3 style='color:white;'>Price Predictions</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:white;'>This tool uses two machine learning models to estimate car prices based on the selected features.</p>", unsafe_allow_html=True)
@@ -81,6 +81,7 @@ with tab1:
         region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
         body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
         transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
+        price_category = st.selectbox("Price Category", sorted(df["Price Category"].unique()))
 
     input_data = {col: 0 for col in hgb_model.feature_names_in_}
     input_data["Month_Num"] = month
@@ -90,7 +91,8 @@ with tab1:
     categorical_prefixes = {
         "Dealer_Region": region,
         "Body Style": body_style,
-        "Transmission": transmission
+        "Transmission": transmission,
+        "Price_Category": price_category
     }
 
     for prefix, value in categorical_prefixes.items():
@@ -122,6 +124,7 @@ with tab1:
             </div>
         """, unsafe_allow_html=True)
 
+# ---------------------- TAB 2 ----------------------
 with tab2:
     st.markdown("## Dealer Sales Overview")
 
@@ -147,6 +150,7 @@ with tab2:
     )
     st.plotly_chart(fig_map, use_container_width=True)
 
+# ---------------------- TAB 3 ----------------------
 with tab3:
     st.markdown("## Market Trends")
     st.markdown("Explore how car prices vary across different body styles, regions, and months.")
