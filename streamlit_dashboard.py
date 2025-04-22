@@ -58,11 +58,18 @@ def load_models():
     lr = joblib.load("linear_regression_baseline.pkl")
     return hgb, lr
 
+# Load and prepare everything
 df = load_data()
 hgb_model, lr_model = load_models()
 
-st.title("Car Sales Forecasting Dashboard")
+# Preload dropdown options
+region_options = sorted(df["Dealer_Region"].dropna().unique())
+body_style_options = sorted(df["Body Style"].dropna().unique())
+transmission_options = sorted(df["Transmission"].dropna().unique())
+color_options = sorted(df["Color"].dropna().unique())
+month_options = sorted(df["Month_Num"].dropna().unique())
 
+st.title("Car Sales Forecasting Dashboard")
 tab1, tab2, tab3 = st.tabs(["Price Prediction Tool", "Dealer Insights", "Market Trends"])
 
 # ---------------------- TAB 1 ----------------------
@@ -76,10 +83,10 @@ with tab1:
         car_age = st.slider("Car Age", 0, 20, 5)
         income = st.slider("Annual Income", 20000, 200000, 75000)
 
-        region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].dropna().unique()))
-        body_style = st.selectbox("Body Style", sorted(df["Body Style"].dropna().unique()))
-        transmission = st.selectbox("Transmission", sorted(df["Transmission"].dropna().unique()))
-        color = st.selectbox("Color", sorted(df["Color"].dropna().unique()))
+        region = st.selectbox("Dealer Region", region_options)
+        body_style = st.selectbox("Body Style", body_style_options)
+        transmission = st.selectbox("Transmission", transmission_options)
+        color = st.selectbox("Color", color_options)
 
     feature_names = list(hgb_model.feature_names_in_)
     input_data = {col: 0 for col in feature_names}
@@ -150,16 +157,13 @@ with tab3:
     st.markdown("## Market Trends")
     st.markdown("Explore how car prices vary across different body styles, regions, and months.")
 
-    df["Body Style"] = df["Body Style"].str.strip().str.title()
-    df["Dealer_Region"] = df["Dealer_Region"].str.strip().str.title()
-
     col1, col2, col3 = st.columns(3)
     with col1:
-        body_val = st.selectbox("Filter by Body Style", ["All"] + sorted(df["Body Style"].dropna().unique()))
+        body_val = st.selectbox("Filter by Body Style", ["All"] + body_style_options)
     with col2:
-        region_val = st.selectbox("Filter by Region", ["All"] + sorted(df["Dealer_Region"].dropna().unique()))
+        region_val = st.selectbox("Filter by Region", ["All"] + region_options)
     with col3:
-        month_val = st.selectbox("Filter by Month", ["All"] + sorted(df["Month_Num"].dropna().unique()))
+        month_val = st.selectbox("Filter by Month", ["All"] + month_options)
 
     df_filtered = df.copy()
     if body_val != "All":
