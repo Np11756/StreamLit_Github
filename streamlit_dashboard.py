@@ -32,12 +32,16 @@ def load_data():
             df[new_col] = df[onehot_cols].idxmax(axis=1).str.replace(prefix, "", regex=False)
         else:
             df[new_col] = "Unknown"
-            st.warning(f"⚠️ Skipped: No columns found with prefix '{prefix}'")
+            st.warning(f"⚠️ No columns found for: {prefix}")
         return df
 
+    # Only these three — no Price Category
     df = safe_reconstruct_column(df, "Dealer_Region_", "Dealer_Region")
     df = safe_reconstruct_column(df, "Body Style_", "Body Style")
     df = safe_reconstruct_column(df, "Transmission_", "Transmission")
+
+    # Debug: Print column names
+    st.write("CSV Columns:", df.columns.tolist())
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -181,5 +185,4 @@ with tab3:
 
     st.markdown("### Summary Statistics (Filtered Data)")
     summary_stats = df_filtered[["Price ($)", "Annual Income"]].describe().T
-    summary_stats.rename(index={"Price ($)": "Price", "Annual Income": "Income"}, inplace=True)
-    st.dataframe(summary_stats.style.format(precision=2))
+    summary_stats.rename(index={"Price ($)": "Price", "Annual Income": "Income"}, inplace_
