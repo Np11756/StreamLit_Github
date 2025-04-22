@@ -26,18 +26,19 @@ st.markdown("""
 def load_data():
     df = pd.read_csv("car_sales_cleaned.csv")
 
-    # Initialize reconstructed columns safely
-    def reconstruct_column(prefix, name):
-        cols = [col for col in df.columns if col.startswith(prefix)]
-        if cols:
-            df[name] = df[cols].idxmax(axis=1).str.replace(prefix, "")
+    def safe_reconstruct(df, prefix, new_col):
+        matching_cols = [col for col in df.columns if col.startswith(prefix)]
+        if matching_cols:
+            df[new_col] = df[matching_cols].idxmax(axis=1).str.replace(prefix, "")
         else:
-            df[name] = "Unknown"
+            st.warning(f"Warning: No one-hot columns found for '{prefix}'. Column '{new_col}' set to 'Unknown'.")
+            df[new_col] = "Unknown"
+        return df
 
-    reconstruct_column("Dealer_Region_", "Dealer_Region")
-    reconstruct_column("Body Style_", "Body Style")
-    reconstruct_column("Transmission_", "Transmission")
-    reconstruct_column("Price_Category_", "Price Category")
+    df = safe_reconstruct(df, "Dealer_Region_", "Dealer_Region")
+    df = safe_reconstruct(df, "Body Style_", "Body Style")
+    df = safe_reconstruct(df, "Transmission_", "Transmission")
+    df = safe_reconstruct(df, "Price_Category_", "Price Category")
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -47,6 +48,7 @@ def load_data():
         "Pasco": (46.2396, -119.1006),
         "Scottsdale": (33.4942, -111.9261),
     }
+
     df["Latitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[0])
     df["Longitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[1])
 
