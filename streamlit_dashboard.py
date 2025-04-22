@@ -26,15 +26,15 @@ st.markdown("""
 def load_data():
     df = pd.read_csv("car_sales_cleaned.csv")
 
-    # Reconstruct Dealer Region
+    # Reconstruct categorical values from one-hot columns
     region_cols = [col for col in df.columns if "Dealer_Region_" in col]
-    df["Dealer_Region"] = df[region_cols].idxmax(axis=1).str.replace("Dealer_Region_", "")
-
-    # Reconstruct Body Style
     body_cols = [col for col in df.columns if "Body Style_" in col]
-    df["Body Style"] = df[body_cols].idxmax(axis=1).str.replace("Body Style_", "")
+    trans_cols = [col for col in df.columns if "Transmission_" in col]
 
-    # Coordinates for map
+    df["Dealer_Region"] = df[region_cols].idxmax(axis=1).str.replace("Dealer_Region_", "")
+    df["Body Style"] = df[body_cols].idxmax(axis=1).str.replace("Body Style_", "")
+    df["Transmission"] = df[trans_cols].idxmax(axis=1).str.replace("Transmission_", "")
+
     region_coords = {
         "Austin": (30.2672, -97.7431),
         "Greenville": (34.8526, -82.3940),
@@ -125,7 +125,6 @@ with tab2:
     region_sales.columns = ["Region_Encoded", "Total Sales"]
     region_sales["Region"] = region_sales["Region_Encoded"].str.replace("Dealer_Region_", "")
 
-    # Interactive bar chart
     fig_bar = px.bar(region_sales, x="Region", y="Total Sales", title="Click a Region to Filter the Map")
     selected_region = plotly_events(fig_bar, click_event=True, key="bar")
 
@@ -147,7 +146,6 @@ with tab3:
     st.markdown("## Market Trends")
     st.markdown("Explore how car prices vary across different body styles, regions, and months.")
 
-    # Normalize for consistent filtering
     df["Body Style"] = df["Body Style"].str.strip().str.title()
     df["Dealer_Region"] = df["Dealer_Region"].str.strip().str.title()
 
