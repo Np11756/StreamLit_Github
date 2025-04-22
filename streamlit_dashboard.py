@@ -1,5 +1,3 @@
-
-%%writefile /content/streamlit_dashboard.py
 import streamlit as st
 import pandas as pd
 import joblib
