@@ -5,11 +5,9 @@ import plotly.express as px
 
 st.set_page_config(page_title="Car Sales Dashboard", layout="wide")
 
-@st.cache_data
 def load_data():
     return pd.read_csv("car_sales_cleaned.csv")
 
-@st.cache_resource
 def load_models():
     hgb = joblib.load("histgradient_model.pkl")
     lr = joblib.load("linear_regression_baseline.pkl")
