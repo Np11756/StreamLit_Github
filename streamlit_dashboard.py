@@ -1,7 +1,9 @@
+%%writefile /content/streamlit_dashboard.py
 import streamlit as st
 import pandas as pd
 import joblib
 import plotly.express as px
+from streamlit_plotly_events import plotly_events
 
 st.set_page_config(
     page_title="Car Sales Forecasting Dashboard",
@@ -25,9 +27,15 @@ st.markdown("""
 def load_data():
     df = pd.read_csv("car_sales_cleaned.csv")
 
+    # Reconstruct Dealer Region
     region_cols = [col for col in df.columns if "Dealer_Region_" in col]
     df["Dealer_Region"] = df[region_cols].idxmax(axis=1).str.replace("Dealer_Region_", "")
 
+    # Reconstruct Body Style
+    body_cols = [col for col in df.columns if "Body Style_" in col]
+    df["Body Style"] = df[body_cols].idxmax(axis=1).str.replace("Body Style_", "")
+
+    # Coordinates for map
     region_coords = {
         "Austin": (30.2672, -97.7431),
         "Greenville": (34.8526, -82.3940),
@@ -36,9 +44,9 @@ def load_data():
         "Pasco": (46.2396, -119.1006),
         "Scottsdale": (33.4942, -111.9261),
     }
-
     df["Latitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[0])
     df["Longitude"] = df["Dealer_Region"].map(lambda r: region_coords.get(r, (0, 0))[1])
+
     return df
 
 @st.cache_resource
@@ -110,26 +118,21 @@ with tab1:
             </div>
         """, unsafe_allow_html=True)
 
-from streamlit_plotly_events import plotly_events  # Make sure you install this in your environment!
-
 with tab2:
     st.markdown("## Dealer Sales Overview")
 
-    # Calculate region-level sales totals
     region_cols = [col for col in df.columns if "Dealer_Region_" in col]
     region_sales = df[region_cols].sum().sort_values(ascending=False).reset_index()
     region_sales.columns = ["Region_Encoded", "Total Sales"]
     region_sales["Region"] = region_sales["Region_Encoded"].str.replace("Dealer_Region_", "")
 
-    # Bar chart with clickable events
+    # Interactive bar chart
     fig_bar = px.bar(region_sales, x="Region", y="Total Sales", title="Click a Region to Filter the Map")
     selected_region = plotly_events(fig_bar, click_event=True, key="bar")
 
     st.markdown("### Dealership Locations Map")
-
-    # Default to all regions, but filter if clicked
     if selected_region:
-        selected = selected_region[0]["x"]  # clicked bar x value is the region name
+        selected = selected_region[0]["x"]
         filtered_df = df[df["Dealer_Region"] == selected]
     else:
         filtered_df = df
@@ -145,11 +148,10 @@ with tab3:
     st.markdown("## Market Trends")
     st.markdown("Explore how car prices vary across different body styles, regions, and months.")
 
-    # Normalize values for consistent filtering
+    # Normalize for consistent filtering
     df["Body Style"] = df["Body Style"].str.strip().str.title()
     df["Dealer_Region"] = df["Dealer_Region"].str.strip().str.title()
 
-    # Sidebar filters
     col1, col2, col3 = st.columns(3)
     with col1:
         body_val = st.selectbox("Filter by Body Style", ["All"] + sorted(df["Body Style"].dropna().unique()))
@@ -158,7 +160,6 @@ with tab3:
     with col3:
         month_val = st.selectbox("Filter by Month", ["All"] + sorted(df["Month_Num"].dropna().unique()))
 
-    # Apply filters
     df_filtered = df.copy()
     if body_val != "All":
         df_filtered = df_filtered[df_filtered["Body Style"] == body_val]
@@ -167,27 +168,14 @@ with tab3:
     if month_val != "All":
         df_filtered = df_filtered[df_filtered["Month_Num"] == int(month_val)]
 
-    # Ensure all months are represented in the trend chart
     all_months = pd.DataFrame({"Month_Num": range(1, 13)})
     trend_data = df_filtered.groupby("Month_Num")["Price ($)"].sum().reset_index()
     trend_data = pd.merge(all_months, trend_data, on="Month_Num", how="left").fillna(0)
 
-    # Plot trend chart
-    fig_trend = px.line(
-        trend_data,
-        x="Month_Num",
-        y="Price ($)",
-        markers=True,
-        title="Monthly Sales Trend"
-    )
-    fig_trend.update_layout(
-        plot_bgcolor='#1e1e1e',
-        paper_bgcolor='#1e1e1e',
-        font_color='white'
-    )
+    fig_trend = px.line(trend_data, x="Month_Num", y="Price ($)", markers=True, title="Monthly Sales Trend")
+    fig_trend.update_layout(plot_bgcolor='#1e1e1e', paper_bgcolor='#1e1e1e', font_color='white')
     st.plotly_chart(fig_trend, use_container_width=True)
 
-    # Summary stats (without Car Age)
     st.markdown("### Summary Statistics (Filtered Data)")
     summary_stats = df_filtered[["Price ($)", "Annual Income"]].describe().T
     summary_stats.rename(index={"Price ($)": "Price", "Annual Income": "Income"}, inplace=True)
