@@ -50,8 +50,8 @@ def load_models():
 df = load_data()
 hgb_model, lr_model = load_models()
 
-st.title("Car Sales Forecasting Dashboard")
-st.markdown("Use this dashboard to explore machine learning-based car price predictions, dealership performance, and sales trends.")
+st.title("Car Sales Dashboard")
+st.markdown("Car price predictions, dealership performance, and overall sales trends.")
 
 tab1, tab2, tab3 = st.tabs(["Price Prediction", "Dealership Map", "Market Summary"])
 
