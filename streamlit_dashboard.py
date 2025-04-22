@@ -31,46 +31,48 @@ with tab1:
         month = st.slider("Month of Sale", 1, 12, 6)
     
     with col2:
-        transmission_options = sorted([col.replace("Transmission_", "") for col in hgb_model.feature_names_in_ if col.startswith("Transmission_")])
+        # Load dropdown options directly from the dataset, not model
+        transmission_options = sorted([col.replace("Transmission_", "") for col in df.columns if col.startswith("Transmission_")])
         transmission = st.selectbox("Transmission", transmission_options)
 
-        color_options = sorted([col.replace("Color_", "") for col in hgb_model.feature_names_in_ if col.startswith("Color_")])
+        color_options = sorted([col.replace("Color_", "") for col in df.columns if col.startswith("Color_")])
         color = st.selectbox("Color", color_options)
 
-        body_style_options = sorted([col.replace("Body Style_", "") for col in hgb_model.feature_names_in_ if col.startswith("Body Style_")])
+        body_style_options = sorted([col.replace("Body Style_", "") for col in df.columns if col.startswith("Body Style_")])
         body_style = st.selectbox("Body Style", body_style_options)
 
-        region_options = sorted([col.replace("Dealer_Region_", "") for col in hgb_model.feature_names_in_ if col.startswith("Dealer_Region_")])
+        region_options = sorted([col.replace("Dealer_Region_", "") for col in df.columns if col.startswith("Dealer_Region_")])
         region = st.selectbox("Dealer Region", region_options)
 
-    # Safe feature construction
+    # Match model's input features
     feature_list = list(hgb_model.feature_names_in_)
     input_data = {col: 0 for col in feature_list}
     input_data["Annual Income"] = income
     input_data["Car_Age"] = car_age
     input_data["Month_Num"] = month
 
-    # Set one-hot encoded flags only if feature exists
-    for prefix, value in {
-        "Transmission": transmission,
-        "Color": color,
-        "Body Style": body_style,
-        "Dealer_Region": region
-    }.items():
-        col_name = f"{prefix}_{value}"
+    # Handle one-hot features (only if present in model)
+    encoded_fields = {
+        f"Transmission_{transmission}": transmission,
+        f"Color_{color}": color,
+        f"Body Style_{body_style}": body_style,
+        f"Dealer_Region_{region}": region
+    }
+
+    for col_name in encoded_fields:
         if col_name in input_data:
             input_data[col_name] = 1
 
     input_df = pd.DataFrame([input_data])
 
-    # DEBUG: Show the input and model columns
-    with st.expander("🛠️ Debug Info"):
-        st.write("Input DataFrame Sent to Model:")
+    # DEBUG INFO
+    with st.expander("🔎 Debug: Model Input Sent"):
+        st.write("Input DataFrame")
         st.dataframe(input_df)
-        st.write("Expected Model Columns:")
+        st.write("Expected Features")
         st.write(feature_list)
 
-    # Predict
+    # Make predictions
     hgb_pred = hgb_model.predict(input_df)[0]
     lr_pred = lr_model.predict(input_df)[0]
 
