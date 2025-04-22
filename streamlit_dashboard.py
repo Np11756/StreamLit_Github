@@ -32,13 +32,12 @@ def load_data():
             df[new_col] = df[onehot_cols].idxmax(axis=1).str.replace(prefix, "", regex=False)
         else:
             df[new_col] = "Unknown"
-            st.warning(f"Column reconstruction skipped: No columns found with prefix '{prefix}'")
+            st.warning(f"⚠️ Skipped: No columns found with prefix '{prefix}'")
         return df
 
     df = safe_reconstruct_column(df, "Dealer_Region_", "Dealer_Region")
     df = safe_reconstruct_column(df, "Body Style_", "Body Style")
     df = safe_reconstruct_column(df, "Transmission_", "Transmission")
-    df = safe_reconstruct_column(df, "Price_Category_", "Price Category")  # Safe, won't crash if missing
 
     region_coords = {
         "Austin": (30.2672, -97.7431),
@@ -72,16 +71,15 @@ with tab1:
     st.markdown("<h3 style='color:white;'>Price Predictions</h3>", unsafe_allow_html=True)
     st.markdown("<p style='color:white;'>This tool uses two machine learning models to estimate car prices based on the selected features.</p>", unsafe_allow_html=True)
 
-with st.sidebar:
-    st.markdown("### Customize Car Features")
-    month = st.slider("Month of Sale", 1, 12, 6)
-    car_age = st.slider("Car Age", 0, 20, 5)
-    income = st.slider("Annual Income", 20000, 200000, 75000)
+    with st.sidebar:
+        st.markdown("### Customize Car Features")
+        month = st.slider("Month of Sale", 1, 12, 6)
+        car_age = st.slider("Car Age", 0, 20, 5)
+        income = st.slider("Annual Income", 20000, 200000, 75000)
 
-    region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
-    body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
-    transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
-    price_category = st.selectbox("Price Category", sorted(df["Price Category"].unique()))
+        region = st.selectbox("Dealer Region", sorted(df["Dealer_Region"].unique()))
+        body_style = st.selectbox("Body Style", sorted(df["Body Style"].unique()))
+        transmission = st.selectbox("Transmission", sorted(df["Transmission"].unique()))
 
     input_data = {col: 0 for col in hgb_model.feature_names_in_}
     input_data["Month_Num"] = month
@@ -91,8 +89,7 @@ with st.sidebar:
     categorical_prefixes = {
         "Dealer_Region": region,
         "Body Style": body_style,
-        "Transmission": transmission,
-        "Price_Category": price_category
+        "Transmission": transmission
     }
 
     for prefix, value in categorical_prefixes.items():
